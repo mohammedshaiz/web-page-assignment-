@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Integration Demo</title>
+</head>
+<body>
+
+    <!-- Login Form -->
+    <h2>Login</h2>
+    <form id="loginForm">
+        <label for="login_id">Username:</label>
+        <input type="text" id="login_id" required>
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" required>
+        <br>
+        <button type="button" onclick="authenticateUser()">Login</button>
+    </form>
+
+    <!-- Customer List Table -->
+    <h2>Customer List</h2>
+    <table id="customerTable" border="1">
+        <thead>
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody id="customerTableBody"></tbody>
+    </table>
+
+    <!-- Create/Update Customer Form -->
+    <h2>Create/Update Customer</h2>
+    <form id="customerForm">
+        <label for="first_name">First Name:</label>
+        <input type="text" id="first_name" required>
+        <br>
+        <label for="last_name">Last Name:</label>
+        <input type="text" id="last_name" required>
+        <br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
+        <br>
+        <button type="button" onclick="createOrUpdateCustomer()">Create/Update</button>
+    </form>
+
+    <!-- Delete Customer Form -->
+    <h2>Delete Customer</h2>
+    <form id="deleteCustomerForm">
+        <label for="delete_uuid">Customer UUID:</label>
+        <input type="text" id="delete_uuid" required>
+        <br>
+        <button type="button" onclick="deleteCustomer()">Delete</button>
+    </form>
+
+    <!-- Script for API Integration -->
+    <script>
+        async function authenticateUser() {
+            const loginId = document.getElementById("login_id").value;
+            const password = document.getElementById("password").value;
+
+            const authUrl = 'https://qa2.sunbasedata.com/sunbase/portal/api/assignment_auth.jsp';
+
+            try {
+                const response = await fetch(authUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ login_id: loginId, password: password }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const token = data.token;
+                    console.log('Authentication successful. Token:', token);
+                    // Store the token or use it for subsequent API calls
+                } else if (response.status === 401) {
+                    console.error('Invalid Authorization');
+                } else {
+                    console.error('Authentication failed');
+                }
+            } catch (error) {
+                console.error('Authentication error:', error.message);
+            }
+        }
+
+        async function createOrUpdateCustomer() {
+            const token = ''; // Replace with the token received during authentication
+            const firstName = document.getElementById("first_name").value;
+            const lastName = document.getElementById("last_name").value;
+            const email = document.getElementById("email").value;
+
+            const createOrUpdateUrl = 'https://qa2.sunbasedata.com/sunbase/portal/api/assignment.jsp';
+            const body = {
+                cmd: 'create',
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+            };
+
+            try {
+                const response = await fetch(createOrUpdateUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(body),
+                });
+
+                if (response.ok) {
+                    console.log('Customer created/updated successfully');
+                    // Optionally update the customer list or perform other actions
+                } else {
+                    const data = await response.json();
+                    console.error('Failed to create/update customer:', data);
+                }
+            } catch (error) {
+                console.error('API error:', error.message);
+            }
+        }
+
+        async function deleteCustomer() {
+            const token = ''; // Replace with the token received during authentication
+            const uuid = document.getElementById("delete_uuid").value;
+
+            const deleteUrl = `https://qa2.sunbasedata.com/sunbase/portal/api/assignment.jsp?cmd=delete&uuid=${uuid}`;
+
+            try {
+                const response = await fetch(deleteUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (response.ok) {
+                    console.log('Customer deleted successfully');
+                    // Optionally update the customer list or perform other actions
+                } else {
+                    const data = await response.json();
+                    console.error('Failed to delete customer:', data);
+                }
+            } catch (error) {
+                console.error('API error:', error.message);
+            }
+        }
+    </script>
+
+</body>
+</html>
